@@ -50,7 +50,6 @@ double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
     return R * c; 
 }
 
-
 int main()
 {
 
@@ -125,5 +124,8 @@ int main()
             }else addEdgeNotOneWay(graph, source, destination, distance);
         }
     }
+
+    /*Làm phần algorithm dijkstra*/
+
     return 0;
 }
