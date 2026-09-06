@@ -125,19 +125,5 @@ int main()
             }else addEdgeNotOneWay(graph, source, destination, distance);
         }
     }
-    for (int i = 0; i < 10; i++)
-    {
-    cout << "Node " << i << ": ";
-
-    for (const auto& [to, weight] : graph[i])
-    {
-        cout << to << " (" << weight << "m) ";
-    }
-
-    cout << "\n";
-}
-    
-
-
     return 0;
 }
