@@ -2,6 +2,7 @@
 #include <math.h>
 #include <cmath>
 #include "library/pugixml.hpp"
+const INF = 1e9;
 using namespace std;
 struct Node {
     long long id;
