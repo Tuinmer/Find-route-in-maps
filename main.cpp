@@ -51,11 +51,12 @@ double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
     return R * c; 
 }
 
-
-void dijkstra(vector<vector<edge>>& graph,  int s, int end)
+void dijkstra(vector<vector<edge>>& graph,  int s, int e)
 {
     vector<double> d(graph.size(), INF);
+    vector<int> pre(graph.size(), -1);
     d[s] = 0;
+    pre[s] = s;
     priority_queue<pair<double, int>, vector<pair<double, int>>, greater<pair<double, int>>> Q;
     Q.push({0,s});
     while (!Q.empty())
@@ -68,7 +69,7 @@ void dijkstra(vector<vector<edge>>& graph,  int s, int end)
         {
             continue;
         }
-        if (u==end)
+        if (u==e)
         {
             break;
         }
@@ -80,10 +81,29 @@ void dijkstra(vector<vector<edge>>& graph,  int s, int end)
             {
                 d[v] = d[u] + w;
                 Q.push({d[v], v});
+                pre[v] = u; // truoc v la u
             }
         }
     }
-    cout<<"Khoang cach ngan nhat: "<< d[end]<<"m\n";
+    double shortestDistance = d[e];
+    vector<int> path;
+    while(1)
+    {
+        path.push_back(e);
+        if (e==s) break;
+        e = pre[e];
+    }
+    reverse(begin(path), end(path));
+    if (d[e] == INF)
+    {
+        cout << "Khong co duong di!\n";
+        return;
+    }
+    for (int x: path)
+    {
+        cout<<x<<" ";
+    }
+    cout<<"Khoang cach ngan nhat: "<< shortestDistance<<"m\n";
 }
 
 
@@ -144,7 +164,7 @@ int main()
         for (pugi::xml_node nd : way.children("nd"))
         {
             long long ref = nd.attribute("ref").as_llong();
-            wayNodes.push_back(ref);6
+            wayNodes.push_back(ref);
         }
         for (int i=0;i<wayNodes.size()-1;i++)
         {
@@ -161,7 +181,6 @@ int main()
             }else addEdgeNotOneWay(graph, source, destination, distance);
         }
     }
-
     /*Làm phần algorithm dijkstra   graph[1] = {[1,2], [1,3]}*/
     dijkstra(graph,10,15);
     return 0;
