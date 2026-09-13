@@ -12,17 +12,17 @@ struct Node {
 struct edge {
     long long to;
     double weight;
+    string roadName;
 };
-
-void addEdgeNotOneWay(vector<vector<edge>>& graph,int source,int destination,double weight
-)
+vector<string> optimizeRoad;
+void addEdgeNotOneWay(vector<vector<edge>>& graph,int source,int destination,double weight,string roadName)
 {
-    graph[source].push_back({destination, weight});
-    graph[destination].push_back({source, weight});
+    graph[source].push_back({destination, weight,roadName});
+    graph[destination].push_back({source, weight,roadName});
 }
-void addEdgeOneWay(vector<vector<edge>>& graph, int source, int destination, double weight)
+void addEdgeOneWay(vector<vector<edge>>& graph, int source, int destination, double weight, string roadName)
 {
-    graph[source].push_back({destination, weight});
+    graph[source].push_back({destination, weight,roadName});
 };
 bool isRoad(string highway) {
     return highway == "motorway" 
@@ -51,7 +51,7 @@ double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
     return R * c; 
 }
 
-void dijkstra(vector<vector<edge>>& graph,  int s, int e)
+void dijkstra(vector<vector<edge>>& graph, vector<Node>& graphNodes,  int s, int e)
 {
     vector<double> d(graph.size(), INF);
     vector<int> pre(graph.size(), -1);
@@ -87,6 +87,11 @@ void dijkstra(vector<vector<edge>>& graph,  int s, int e)
     }
     double shortestDistance = d[e];
     vector<int> path;
+    if (d[e] == INF)
+    {
+        cout << "Khong co duong di!\n";
+        return;
+    }
     while(1)
     {
         path.push_back(e);
@@ -94,14 +99,19 @@ void dijkstra(vector<vector<edge>>& graph,  int s, int e)
         e = pre[e];
     }
     reverse(begin(path), end(path));
-    if (d[e] == INF)
+    for (int i = 0; i < path.size() - 1; i++)
     {
-        cout << "Khong co duong di!\n";
-        return;
-    }
-    for (int x: path)
-    {
-        cout<<x<<" ";
+        int u = path[i];
+        int v = path[i + 1];
+
+        for (auto edge : graph[u])
+        {
+            if (edge.to == v)
+            {
+                optimizeRoad.push_back(edge.roadName);
+                break;
+            }
+        }
     }
     cout<<"Khoang cach ngan nhat: "<< shortestDistance<<"m\n";
 }
@@ -118,7 +128,7 @@ int main()
     unordered_map<long long, Node> nodes;
     unordered_map<long long,int> osmToGraph;
     int graphid=0;
-
+    vector<Node> graphNodes;
     for (pugi::xml_node node : osm.children("node"))
     {
         long long id = node.attribute("id").as_llong();
@@ -130,6 +140,7 @@ int main()
         newNode.lon = lon;
         nodes[id] = newNode;
         osmToGraph[id] = graphid;
+        graphNodes.push_back(newNode);
         graphid++;
     }
 
@@ -137,6 +148,7 @@ int main()
     for (pugi::xml_node way : osm.children("way"))
     {
         string highway="";
+        string roadName = "No Name";
         
         for (pugi::xml_node tag : way.children("tag"))
         {
@@ -145,7 +157,10 @@ int main()
             if (key == "highway")
             {
                 highway = value;
-                break;
+            }
+            if (key == "name")
+            {
+                roadName = value;
             }
         }
         if (!isRoad(highway)) continue;
@@ -177,11 +192,21 @@ int main()
             long long destination = osmToGraph[to];
             if (oneway == "yes")
             {
-                addEdgeOneWay(graph, source, destination, distance);
-            }else addEdgeNotOneWay(graph, source, destination, distance);
+                addEdgeOneWay(graph, source, destination, distance,roadName);
+            }else addEdgeNotOneWay(graph, source, destination, distance,roadName);
         }
     }
     /*Làm phần algorithm dijkstra   graph[1] = {[1,2], [1,3]}*/
-    dijkstra(graph,10,15);
+    dijkstra(graph,graphNodes,10,15);
+    string temp = optimizeRoad[0];
+    cout<<optimizeRoad[0]<<"->";
+    for(int i=1;i<optimizeRoad.size();i++)
+    {
+        if (optimizeRoad[i] != temp)
+        {
+            temp=optimizeRoad[i];
+            cout<<" -> "<<optimizeRoad[i];
+        }
+    }
     return 0;
 }
