@@ -2,7 +2,7 @@
 #include <math.h>
 #include <cmath>
 #include "library/pugixml.hpp"
-const INF = 1e9;
+const double INF = 1e18;
 using namespace std;
 struct Node {
     long long id;
@@ -52,9 +52,38 @@ double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
 }
 
 
-void dijkstra(vector<vector<edge>>& graph, int start, int end)
+void dijkstra(vector<vector<edge>>& graph,  int s, int end)
 {
-    vector<ll> d(n +1, INF);
+    vector<double> d(graph.size(), INF);
+    d[s] = 0;
+    priority_queue<pair<double, int>, vector<pair<double, int>>, greater<pair<double, int>>> Q;
+    Q.push({0,s});
+    while (!Q.empty())
+    {
+        auto top = Q.top();
+        Q.pop();
+        long long u = top.second;
+        double kc = top.first;
+        if (kc > d[u])
+        {
+            continue;
+        }
+        if (u==end)
+        {
+            break;
+        }
+        for (auto it:graph[u])
+        {
+            long long v = it.to;
+            double w = it.weight;
+            if (d[v] > d[u] + w)
+            {
+                d[v] = d[u] + w;
+                Q.push({d[v], v});
+            }
+        }
+    }
+    cout<<"Khoang cach ngan nhat: "<< d[end]<<"m\n";
 }
 
 
@@ -115,7 +144,7 @@ int main()
         for (pugi::xml_node nd : way.children("nd"))
         {
             long long ref = nd.attribute("ref").as_llong();
-            wayNodes.push_back(ref);
+            wayNodes.push_back(ref);6
         }
         for (int i=0;i<wayNodes.size()-1;i++)
         {
@@ -133,7 +162,7 @@ int main()
         }
     }
 
-    /*Làm phần algorithm dijkstra*/
-
+    /*Làm phần algorithm dijkstra   graph[1] = {[1,2], [1,3]}*/
+    dijkstra(graph,10,15);
     return 0;
 }
