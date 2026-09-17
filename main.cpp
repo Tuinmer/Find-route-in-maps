@@ -55,6 +55,10 @@ void dijkstra(vector<vector<edge>>& graph, vector<Node>& graphNodes,  int s, int
 {
     vector<double> d(graph.size(), INF);
     vector<int> pre(graph.size(), -1);
+    if (s==e)
+    {
+        return cout<<"Điểm đầu trùng với điểm cuối";
+    }
     d[s] = 0;
     pre[s] = s;
     priority_queue<pair<double, int>, vector<pair<double, int>>, greater<pair<double, int>>> Q;
@@ -122,7 +126,7 @@ int main()
 
     /*Chuyển data xml thành data máy đọc được*/
     pugi::xml_document doc;
-    doc.load_file("Data/Quan 1 (1).osm");
+    doc.load_file("Data/Saigon.osm");
     pugi::xml_node osm = doc.child("osm");
 
     unordered_map<long long, Node> nodes;
@@ -209,4 +213,6 @@ int main()
         }
     }
     return 0;
+
+
 }
