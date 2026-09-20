@@ -196,8 +196,8 @@ int main()
             long long destination = osmToGraph[to];
             if (oneway == "yes")
             {
-                addEdgeOneWay(graph, source, destination, distance,roadName);
-            }else addEdgeNotOneWay(graph, source, destination, distance,roadName);
+                addEdgeOneWay(graph, source, destination, distance, roadName);
+            }else addEdgeNotOneWay(graph, source, destination, distance, roadName);
         }
     }
     /*Làm phần algorithm dijkstra   graph[1] = {[1,2], [1,3]}*/
