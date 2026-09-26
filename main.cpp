@@ -57,7 +57,7 @@ void dijkstra(vector<vector<edge>>& graph, vector<Node>& graphNodes,  int s, int
     vector<int> pre(graph.size(), -1);
     if (s==e)
     {
-        return cout<<"Điểm đầu trùng với điểm cuối";
+        cout<<"Điểm đầu trùng với điểm cuối";
     }
     d[s] = 0;
     pre[s] = s;
@@ -120,6 +120,22 @@ void dijkstra(vector<vector<edge>>& graph, vector<Node>& graphNodes,  int s, int
     cout<<"Khoang cach ngan nhat: "<< shortestDistance<<"m\n";
 }
 
+int closestNode(vector<Node>& graphNodes, double lat, double lon)
+{
+    int nearest = -1;
+    double minDistance = INF;
+    for (int i=0;i<graphNodes.size();i++)
+    {
+        double temp = calculateDistance(lat,lon,graphNodes[i].lat,graphNodes[i].lon);
+        if (temp<minDistance)
+        {
+            minDistance = temp;
+            nearest = i;
+        }
+    }
+    return graphNodes[nearest].id;
+}
+
 
 int main()
 {
@@ -147,7 +163,6 @@ int main()
         graphNodes.push_back(newNode);
         graphid++;
     }
-
     vector<vector<edge>> graph(graphid);
     for (pugi::xml_node way : osm.children("way"))
     {
@@ -167,6 +182,7 @@ int main()
                 roadName = value;
             }
         }
+        
         if (!isRoad(highway)) continue;
         string oneway="no";
         for (pugi::xml_node tag: way.children("tag"))
@@ -201,7 +217,7 @@ int main()
         }
     }
     /*Làm phần algorithm dijkstra   graph[1] = {[1,2], [1,3]}*/
-    dijkstra(graph,graphNodes,10,15);
+    /*dijkstra(graph,graphNodes,10,15);
     string temp = optimizeRoad[0];
     cout<<optimizeRoad[0]<<"->";
     for(int i=1;i<optimizeRoad.size();i++)
@@ -211,7 +227,17 @@ int main()
             temp=optimizeRoad[i];
             cout<<" -> "<<optimizeRoad[i];
         }
-    }
+    }*/
+    /*nearest node*/
+    double gpsLat = 10.8245273;
+    double gpsLon = 106.6957776;
+    int nearest = closestNode(
+    graphNodes,
+    gpsLat,
+    gpsLon
+    );
+    cout << "Nearest Graph ID: "
+        << nearest << endl;
     return 0;
 
 
