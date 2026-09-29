@@ -15,6 +15,8 @@ struct edge {
     double weight;
     string roadName;
 };
+map<pair<int, int>, vector<int>> grid;
+const double GRID_SIZE = 0.002;
 vector<string> optimizeRoad;
 void addEdgeNotOneWay(vector<vector<edge>>& graph,int source,int destination,double weight,string roadName)
 {
@@ -120,46 +122,32 @@ void dijkstra(vector<vector<edge>>& graph, vector<Node>& graphNodes,  int s, int
     }
     cout<<"Khoang cach ngan nhat: "<< shortestDistance<<"m\n";
 }
-int closestNode(vector<Node> graphNodes,double lat, double loc)
-{
-    int nearestNode = -1;
-    int minDistance = INF;
-    
 
 int closestNode(vector<Node>& graphNodes, double lat, double lon)
 {
     int nearest = -1;
     double minDistance = INF;
-    for (int i=0;i<graphNodes.size();i++)
+
+    for (int i = 0; i < graphNodes.size(); i++)
     {
-        double temp = calculateDistance(lat,lon,graphNodes[i].lat,graphNodes[i].lon);
-        if (temp<minDistance)
+        double distance = calculateDistance(
+            lat,
+            lon,
+            graphNodes[i].lat,
+            graphNodes[i].lon
+        );
+
+        if (distance < minDistance)
         {
-            minDistance = temp;
+            minDistance = distance;
             nearest = i;
         }
     }
+
     return nearest;
 }
-
-
-    for (int i=0;i< graphNodes.size(); i++)
-    {
-        double temp = 0;
-        temp = abs(graphNodes[i].lat - lat) + abs(graphNodes[i].lon - lon);
-        if (temp>minDistance)
-        {
-            nearestNode = graphNodes[i];
-            minDistance = temp;
-        }
-    }
-    return nearestNode;
-}
-
-int main()
-{   
-    //doc tu eps32
-    string stringline;
+int TakeLocFromGps(vector<Node>& graphNodes)
+{
     HANDLE hSerial = CreateFileA(
         "\\\\.\\COM7",
         GENERIC_READ,
@@ -173,35 +161,75 @@ int main()
     if (hSerial == INVALID_HANDLE_VALUE)
     {
         cout << "Khong mo duoc COM7\n";
-        return 1;
+        return -1;
     }
 
-    string stringline;
-char buffer[128];
-DWORD bytesRead;
+    cout << "Da mo COM7!\n";
 
-while (true)
-{
-    if (ReadFile(hSerial,buffer,sizeof(buffer) - 1,&bytesRead,NULL))
+    char buffer[128];
+    DWORD bytesRead;
+    string line = "";
+
+    while (true)
     {
-        buffer[bytesRead] = '\0';
-        stringline += buffer;
-        if (stringline.find('\n') != string::npos)
+        if (ReadFile(hSerial, buffer, sizeof(buffer) - 1, &bytesRead, NULL))
         {
-            break;
+            if (bytesRead > 0)
+            {
+                buffer[bytesRead] = '\0';
+                line += buffer;
+
+                size_t pos;
+
+                while ((pos = line.find('\n')) != string::npos)
+                {
+                    string oneLine = line.substr(0, pos);
+                    line.erase(0, pos + 1);
+
+                    // Xóa \r
+                    if (!oneLine.empty() && oneLine.back() == '\r')
+                        oneLine.pop_back();
+
+                    cout << "Nhan: " << oneLine << endl;
+
+                    double lat, lon;
+                    char comma;
+
+                    stringstream ss(oneLine);
+
+                    if (ss >> lat >> comma >> lon)
+                    {
+                        cout << "GPS: "
+                             << lat << ", "
+                             << lon << endl;
+
+                        int nearest = closestNode(
+                            graphNodes,
+                            lat,
+                            lon
+                        );
+
+                        cout << "Nearest Graph ID: "
+                             << nearest << endl;
+
+                        CloseHandle(hSerial);
+
+                        return nearest;
+                    }
+                }
+            }
         }
     }
 }
-    stringstream ss(stringline);
-    char comma;
-    double gpsLat, gpsLon;
-    ss>>gpsLat>>comma>>gpsLon;
-    CloseHandle(hSerial);
 
 
+
+
+
+int main()
+{   
     /*--------------------------------------------------------------------------*/
     /*Chuyển data xml thành data máy đọc được*/
-
     pugi::xml_document doc;
     doc.load_file("Data/Saigon.osm");
     pugi::xml_node osm = doc.child("osm");
@@ -290,20 +318,12 @@ while (true)
         }
     }*/
 
-    
-    /*nearest node*/
-
-
-
-    
-    int nearest = closestNode(
-    graphNodes,
-    gpsLat,
-    gpsLon
-    );
-    cout << "Nearest Graph ID: "
-        << nearest << endl;
-    return 0;
-
-
+    int nearest = TakeLocFromGps(graphNodes);
 }
+
+
+
+
+
+
+
