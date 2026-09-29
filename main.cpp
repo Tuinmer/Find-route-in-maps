@@ -146,6 +146,7 @@ int closestNode(vector<Node>& graphNodes, double lat, double lon)
 
     return nearest;
 }
+
 int TakeLocFromGps(vector<Node>& graphNodes)
 {
     HANDLE hSerial = CreateFileA(
@@ -166,13 +167,43 @@ int TakeLocFromGps(vector<Node>& graphNodes)
 
     cout << "Da mo COM7!\n";
 
+    // Cau hinh COM7
+    DCB dcbSerialParams = {0};
+    dcbSerialParams.DCBlength = sizeof(dcbSerialParams);
+
+    if (!GetCommState(hSerial, &dcbSerialParams))
+    {
+        cout << "Khong lay duoc cau hinh COM7\n";
+        CloseHandle(hSerial);
+        return -1;
+    }
+
+    dcbSerialParams.BaudRate = CBR_115200;
+    dcbSerialParams.ByteSize = 8;
+    dcbSerialParams.StopBits = ONESTOPBIT;
+    dcbSerialParams.Parity = NOPARITY;
+
+    if (!SetCommState(hSerial, &dcbSerialParams))
+    {
+        cout << "Khong set duoc baud COM7\n";
+        CloseHandle(hSerial);
+        return -1;
+    }
+
+    cout << "COM7: 115200 baud\n";
+
     char buffer[128];
     DWORD bytesRead;
     string line = "";
 
     while (true)
     {
-        if (ReadFile(hSerial, buffer, sizeof(buffer) - 1, &bytesRead, NULL))
+        if (ReadFile(
+            hSerial,
+            buffer,
+            sizeof(buffer) - 1,
+            &bytesRead,
+            NULL))
         {
             if (bytesRead > 0)
             {
@@ -186,11 +217,13 @@ int TakeLocFromGps(vector<Node>& graphNodes)
                     string oneLine = line.substr(0, pos);
                     line.erase(0, pos + 1);
 
-                    // Xóa \r
-                    if (!oneLine.empty() && oneLine.back() == '\r')
+                    if (!oneLine.empty() &&
+                        oneLine.back() == '\r')
+                    {
                         oneLine.pop_back();
+                    }
 
-                    cout << "Nhan: " << oneLine << endl;
+                    cout << "Nhan: [" << oneLine << "]\n";
 
                     double lat, lon;
                     char comma;
@@ -200,6 +233,7 @@ int TakeLocFromGps(vector<Node>& graphNodes)
                     if (ss >> lat >> comma >> lon)
                     {
                         cout << "GPS: "
+                             << fixed << setprecision(6)
                              << lat << ", "
                              << lon << endl;
 
@@ -221,7 +255,6 @@ int TakeLocFromGps(vector<Node>& graphNodes)
         }
     }
 }
-
 
 
 
