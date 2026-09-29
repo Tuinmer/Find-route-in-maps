@@ -9,6 +9,7 @@ struct Node {
     long long id;
     double lat;
     double lon;
+    string name;
 };
 struct edge {
     long long to;
@@ -276,10 +277,23 @@ int main()
         long long id = node.attribute("id").as_llong();
         double lat = node.attribute("lat").as_double();
         double lon = node.attribute("lon").as_double();
+        string name = "";
+        for (pugi::xml_node tag : node.children("tag"))
+        {
+            string key = tag.attribute("k").as_string();
+            string value = tag.attribute("v").as_string();
+
+            if (key == "name")
+            {
+                name = value;
+                break;
+            }
+        }
         Node newNode;
         newNode.id = id;
         newNode.lat = lat;
         newNode.lon = lon;
+        newNode.name = name;
         nodes[id] = newNode;
         osmToGraph[id] = graphid;
         graphNodes.push_back(newNode);
@@ -290,21 +304,17 @@ int main()
     {
         string highway="";
         string roadName = "No Name";
-        
         for (pugi::xml_node tag : way.children("tag"))
         {
             string key = tag.attribute("k").as_string();
             string value = tag.attribute("v").as_string();
-            if (key == "highway")
-            {
-                highway = value;
-            }
             if (key == "name")
             {
                 roadName = value;
             }
         }
-        
+
+
         if (!isRoad(highway)) continue;
         string oneway="no";
         for (pugi::xml_node tag: way.children("tag"))
@@ -351,7 +361,14 @@ int main()
         }
     }*/
 
-    int nearest = TakeLocFromGps(graphNodes);
+    string name1 = "Nhà Hát Thành Phố";
+    for (int i=0;i<graphNodes.size();i++)
+    {
+        if (graphNodes[i].name == name1)
+        {
+            cout<<graphNodes[i].id;
+        }
+    }
 }
 
 
