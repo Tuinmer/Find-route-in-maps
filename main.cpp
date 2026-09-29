@@ -166,8 +166,8 @@ int TakeLocFromGps(vector<Node>& graphNodes)
     }
 
     cout << "Da mo COM7!\n";
+    cout<<"ok";
 
-    // Cau hinh COM7
     DCB dcbSerialParams = {0};
     dcbSerialParams.DCBlength = sizeof(dcbSerialParams);
 
