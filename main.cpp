@@ -120,6 +120,11 @@ void dijkstra(vector<vector<edge>>& graph, vector<Node>& graphNodes,  int s, int
     }
     cout<<"Khoang cach ngan nhat: "<< shortestDistance<<"m\n";
 }
+int closestNode(vector<Node> graphNodes,double lat, double loc)
+{
+    int nearestNode = -1;
+    int minDistance = INF;
+    
 
 int closestNode(vector<Node>& graphNodes, double lat, double lon)
 {
@@ -137,6 +142,19 @@ int closestNode(vector<Node>& graphNodes, double lat, double lon)
     return nearest;
 }
 
+
+    for (int i=0;i< graphNodes.size(); i++)
+    {
+        double temp = 0;
+        temp = abs(graphNodes[i].lat - lat) + abs(graphNodes[i].lon - lon);
+        if (temp>minDistance)
+        {
+            nearestNode = graphNodes[i];
+            minDistance = temp;
+        }
+    }
+    return nearestNode;
+}
 
 int main()
 {   
@@ -259,8 +277,6 @@ while (true)
             }else addEdgeNotOneWay(graph, source, destination, distance, roadName);
         }
     }
-
-    /*----------------------------------------------------------------------------------------------------*/
     /*Làm phần algorithm dijkstra   graph[1] = {[1,2], [1,3]}*/
     /*dijkstra(graph,graphNodes,10,15);
     string temp = optimizeRoad[0];
