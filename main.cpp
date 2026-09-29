@@ -1,5 +1,6 @@
 #include <bits/stdc++.h>
 #include <math.h>
+#include <windows.h>
 #include <cmath>
 #include "library/pugixml.hpp"
 const double INF = 1e18;
@@ -133,14 +134,56 @@ int closestNode(vector<Node>& graphNodes, double lat, double lon)
             nearest = i;
         }
     }
-    return graphNodes[nearest].id;
+    return nearest;
 }
 
 
 int main()
-{
+{   
+    //doc tu eps32
+    string stringline;
+    HANDLE hSerial = CreateFileA(
+        "\\\\.\\COM7",
+        GENERIC_READ,
+        0,
+        NULL,
+        OPEN_EXISTING,
+        0,
+        NULL
+    );
 
+    if (hSerial == INVALID_HANDLE_VALUE)
+    {
+        cout << "Khong mo duoc COM7\n";
+        return 1;
+    }
+
+    string stringline;
+char buffer[128];
+DWORD bytesRead;
+
+while (true)
+{
+    if (ReadFile(hSerial,buffer,sizeof(buffer) - 1,&bytesRead,NULL))
+    {
+        buffer[bytesRead] = '\0';
+        stringline += buffer;
+        if (stringline.find('\n') != string::npos)
+        {
+            break;
+        }
+    }
+}
+    stringstream ss(stringline);
+    char comma;
+    double gpsLat, gpsLon;
+    ss>>gpsLat>>comma>>gpsLon;
+    CloseHandle(hSerial);
+
+
+    /*--------------------------------------------------------------------------*/
     /*Chuyển data xml thành data máy đọc được*/
+
     pugi::xml_document doc;
     doc.load_file("Data/Saigon.osm");
     pugi::xml_node osm = doc.child("osm");
@@ -216,6 +259,8 @@ int main()
             }else addEdgeNotOneWay(graph, source, destination, distance, roadName);
         }
     }
+
+    /*----------------------------------------------------------------------------------------------------*/
     /*Làm phần algorithm dijkstra   graph[1] = {[1,2], [1,3]}*/
     /*dijkstra(graph,graphNodes,10,15);
     string temp = optimizeRoad[0];
@@ -228,9 +273,13 @@ int main()
             cout<<" -> "<<optimizeRoad[i];
         }
     }*/
+
+    
     /*nearest node*/
-    double gpsLat = 10.8245273;
-    double gpsLon = 106.6957776;
+
+
+
+    
     int nearest = closestNode(
     graphNodes,
     gpsLat,
