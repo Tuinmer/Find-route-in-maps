@@ -19,6 +19,9 @@ struct edge {
 map<pair<int, int>, vector<int>> grid;
 const double GRID_SIZE = 0.002;
 vector<string> optimizeRoad;
+vector<Node> graphNodes;
+vector<long long> wayNodes;
+
 void addEdgeNotOneWay(vector<vector<edge>>& graph,int source,int destination,double weight,string roadName)
 {
     graph[source].push_back({destination, weight,roadName});
@@ -257,13 +260,8 @@ int TakeLocFromGps(vector<Node>& graphNodes)
     }
 }
 
-
-
-
-int main()
-{   
-    /*--------------------------------------------------------------------------*/
-    /*Chuyển data xml thành data máy đọc được*/
+void loadData(vector<Node>& graphNodes, vector<long long> wayNodes)
+{
     pugi::xml_document doc;
     doc.load_file("Data/Saigon.osm");
     pugi::xml_node osm = doc.child("osm");
@@ -271,7 +269,7 @@ int main()
     unordered_map<long long, Node> nodes;
     unordered_map<long long,int> osmToGraph;
     int graphid=0;
-    vector<Node> graphNodes;
+    
     for (pugi::xml_node node : osm.children("node"))
     {
         long long id = node.attribute("id").as_llong();
@@ -327,7 +325,7 @@ int main()
                 break;
             }
         }
-        vector<long long> wayNodes;
+        
         for (pugi::xml_node nd : way.children("nd"))
         {
             long long ref = nd.attribute("ref").as_llong();
@@ -348,6 +346,14 @@ int main()
             }else addEdgeNotOneWay(graph, source, destination, distance, roadName);
         }
     }
+}
+
+
+int main()
+{   
+    /*--------------------------------------------------------------------------*/
+    /*Chuyển data xml thành data máy đọc được*/
+    
     /*Làm phần algorithm dijkstra   graph[1] = {[1,2], [1,3]}*/
     /*dijkstra(graph,graphNodes,10,15);
     string temp = optimizeRoad[0];
@@ -360,7 +366,7 @@ int main()
             cout<<" -> "<<optimizeRoad[i];
         }
     }*/
-
+    loadData(graphNodes,wayNodes);
     string name1 = "Nhà Hát Thành Phố";
     for (int i=0;i<graphNodes.size();i++)
     {
