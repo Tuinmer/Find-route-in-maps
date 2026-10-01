@@ -32,13 +32,7 @@ void addEdgeOneWay(vector<vector<edge>>& graph, int source, int destination, dou
     graph[source].push_back({destination, weight,roadName});
 };
 bool isRoad(string highway) {
-    return highway == "motorway" 
-    ||highway == "trunk" 
-    ||highway == "primary" 
-    ||highway == "secondary" 
-    ||highway == "tertiary" 
-    ||highway == "residential" 
-    ||highway == "service";
+    return highway == "motorway" ||highway == "trunk" ||highway == "primary" ||highway == "secondary" ||highway == "tertiary" ||highway == "residential" ||highway == "service";
 }
 //Tính khoảng cách trong gps location
 double toRadian(double degree) {
@@ -58,7 +52,7 @@ double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
     return R * c; 
 }
 
-void dijkstra(vector<vector<edge>>& graph, vector<Node>& graphNodes,  int s, int e)
+pair<double, vector<string>> dijkstra(vector<vector<edge>>& graph,int s, int e)
 {
     vector<double> d(graph.size(), INF);
     vector<int> pre(graph.size(), -1);
@@ -69,10 +63,12 @@ void dijkstra(vector<vector<edge>>& graph, vector<Node>& graphNodes,  int s, int
     d[s] = 0;
     pre[s] = s;
     priority_queue<pair<double, int>, vector<pair<double, int>>, greater<pair<double, int>>> Q;
+    //{khoang cach, dinh}
+    
     Q.push({0,s});
     while (!Q.empty())
     {
-        auto top = Q.top();
+        pair<double,int> top= Q.top();
         Q.pop();
         long long u = top.second;
         double kc = top.first;
@@ -84,7 +80,7 @@ void dijkstra(vector<vector<edge>>& graph, vector<Node>& graphNodes,  int s, int
         {
             break;
         }
-        for (auto it:graph[u])
+        for (auto it:graph[u]) // lay may cai du lieu trong graph
         {
             long long v = it.to;
             double w = it.weight;
@@ -96,12 +92,13 @@ void dijkstra(vector<vector<edge>>& graph, vector<Node>& graphNodes,  int s, int
             }
         }
     }
+
     double shortestDistance = d[e];
     vector<int> path;
     if (d[e] == INF)
     {
         cout << "Khong co duong di!\n";
-        return;
+        return {0, {"0"}};
     }
     while(1)
     {
@@ -124,7 +121,7 @@ void dijkstra(vector<vector<edge>>& graph, vector<Node>& graphNodes,  int s, int
             }
         }
     }
-    cout<<"Khoang cach ngan nhat: "<< shortestDistance<<"m\n";
+    return {shortestDistance, optimizeRoad};
 }
 
 int closestNode(vector<Node>& graphNodes, double lat, double lon)
@@ -265,11 +262,9 @@ void loadData(vector<Node>& graphNodes, vector<long long> wayNodes)
     pugi::xml_document doc;
     doc.load_file("Data/Saigon.osm");
     pugi::xml_node osm = doc.child("osm");
-
     unordered_map<long long, Node> nodes;
     unordered_map<long long,int> osmToGraph;
     int graphid=0;
-    
     for (pugi::xml_node node : osm.children("node"))
     {
         long long id = node.attribute("id").as_llong();
