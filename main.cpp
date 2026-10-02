@@ -16,10 +16,9 @@ struct edge {
     double weight;
     string roadName;
 };
-map<pair<int, int>, vector<int>> grid;
-const double GRID_SIZE = 0.002;
 vector<string> optimizeRoad;
 vector<Node> graphNodes;
+vector<pair<double, int>> latIndex;
 vector<long long> wayNodes;
 
 void addEdgeNotOneWay(vector<vector<edge>>& graph,int source,int destination,double weight,string roadName)
@@ -123,28 +122,51 @@ pair<double, vector<string>> dijkstra(vector<vector<edge>>& graph,int s, int e)
     }
     return {shortestDistance, optimizeRoad};
 }
-
-int closestNode(vector<Node>& graphNodes, double lat, double lon)
+int findLatitudePosition(
+    vector<pair<double, int>>& latIndex,
+    double lat
+)
 {
-    int nearest = -1;
-    double minDistance = INF;
+    int left = 0;
+    int right = latIndex.size();
 
-    for (int i = 0; i < graphNodes.size(); i++)
+    while (left < right)
     {
-        double distance = calculateDistance(
-            lat,
-            lon,
-            graphNodes[i].lat,
-            graphNodes[i].lon
-        );
+        int mid = left + (right - left) / 2;
 
-        if (distance < minDistance)
+        if (latIndex[mid].first < lat)
         {
-            minDistance = distance;
-            nearest = i;
+            left = mid + 1;
+        }
+        else
+        {
+            right = mid;
         }
     }
 
+    return left;
+}
+int closestNode(vector<Node>& graphNodes,vector<pair<double, int>>& latIndex,double lat,double lon)
+{
+    int pos = findLatitudePosition(lat);
+    int range = 100;
+    int start = max(0, pos - range);
+    int end = min(
+        (int)latIndex.size(),
+        pos + range
+    );
+    int nearest = -1;
+    double minDistance = INF;
+    for (int i = start; i < end; i++)
+    {
+        int graphID = latIndex[i].second;
+        double distance = calculateDistance(lat,lon,graphNodes[graphID].lat,graphNodes[graphID].lon);
+        if (distance < minDistance)
+        {
+            minDistance = distance;
+            nearest = graphID;
+        }
+    }
     return nearest;
 }
 
@@ -159,44 +181,36 @@ int TakeLocFromGps(vector<Node>& graphNodes)
         0,
         NULL
     );
-
     if (hSerial == INVALID_HANDLE_VALUE)
     {
         cout << "Khong mo duoc COM7\n";
         return -1;
     }
-
     cout << "Da mo COM7!\n";
     cout<<"ok";
-
     DCB dcbSerialParams = {0};
     dcbSerialParams.DCBlength = sizeof(dcbSerialParams);
-
     if (!GetCommState(hSerial, &dcbSerialParams))
     {
         cout << "Khong lay duoc cau hinh COM7\n";
         CloseHandle(hSerial);
         return -1;
     }
-
     dcbSerialParams.BaudRate = CBR_115200;
     dcbSerialParams.ByteSize = 8;
     dcbSerialParams.StopBits = ONESTOPBIT;
     dcbSerialParams.Parity = NOPARITY;
-
     if (!SetCommState(hSerial, &dcbSerialParams))
     {
         cout << "Khong set duoc baud COM7\n";
         CloseHandle(hSerial);
         return -1;
     }
-
     cout << "COM7: 115200 baud\n";
 
     char buffer[128];
     DWORD bytesRead;
     string line = "";
-
     while (true)
     {
         if (ReadFile(
@@ -243,12 +257,9 @@ int TakeLocFromGps(vector<Node>& graphNodes)
                             lat,
                             lon
                         );
-
                         cout << "Nearest Graph ID: "
                              << nearest << endl;
-
                         CloseHandle(hSerial);
-
                         return nearest;
                     }
                 }
@@ -301,12 +312,15 @@ void loadData(vector<Node>& graphNodes, vector<long long> wayNodes)
         {
             string key = tag.attribute("k").as_string();
             string value = tag.attribute("v").as_string();
+            if (key == "highway")
+            {
+                highway = value;
+            }
             if (key == "name")
             {
                 roadName = value;
             }
         }
-
 
         if (!isRoad(highway)) continue;
         string oneway="no";
@@ -341,40 +355,18 @@ void loadData(vector<Node>& graphNodes, vector<long long> wayNodes)
             }else addEdgeNotOneWay(graph, source, destination, distance, roadName);
         }
     }
+    latIndex.resize(graphNodes.size());
+    for (int i = 0; i < graphNodes.size(); i++)
+    {
+        latIndex.push_back({graphNodes[i].lat,i});
+    }
+    sort(latIndex.begin(), latIndex.end());
+
+
 }
 
 
 int main()
 {   
-    /*--------------------------------------------------------------------------*/
-    /*Chuyển data xml thành data máy đọc được*/
     
-    /*Làm phần algorithm dijkstra   graph[1] = {[1,2], [1,3]}*/
-    /*dijkstra(graph,graphNodes,10,15);
-    string temp = optimizeRoad[0];
-    cout<<optimizeRoad[0]<<"->";
-    for(int i=1;i<optimizeRoad.size();i++)
-    {
-        if (optimizeRoad[i] != temp)
-        {
-            temp=optimizeRoad[i];
-            cout<<" -> "<<optimizeRoad[i];
-        }
-    }*/
-    loadData(graphNodes,wayNodes);
-    string name1 = "Nhà Hát Thành Phố";
-    for (int i=0;i<graphNodes.size();i++)
-    {
-        if (graphNodes[i].name == name1)
-        {
-            cout<<graphNodes[i].id;
-        }
-    }
 }
-
-
-
-
-
-
-
