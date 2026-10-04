@@ -19,8 +19,7 @@ struct edge {
 vector<string> optimizeRoad;
 vector<Node> graphNodes;
 vector<pair<double, int>> latIndex;
-vector<long long> wayNodes;
-
+vector<vector<edge>> graph;
 void addEdgeNotOneWay(vector<vector<edge>>& graph,int source,int destination,double weight,string roadName)
 {
     graph[source].push_back({destination, weight,roadName});
@@ -55,9 +54,10 @@ pair<double, vector<string>> dijkstra(vector<vector<edge>>& graph,int s, int e)
 {
     vector<double> d(graph.size(), INF);
     vector<int> pre(graph.size(), -1);
-    if (s==e)
+    if (s == e)
     {
-        cout<<"Điểm đầu trùng với điểm cuối";
+        cout << "Diem dau trung diem cuoi\n";
+        return {0, {}};
     }
     d[s] = 0;
     pre[s] = s;
@@ -91,7 +91,6 @@ pair<double, vector<string>> dijkstra(vector<vector<edge>>& graph,int s, int e)
             }
         }
     }
-
     double shortestDistance = d[e];
     vector<int> path;
     if (d[e] == INF)
@@ -122,18 +121,13 @@ pair<double, vector<string>> dijkstra(vector<vector<edge>>& graph,int s, int e)
     }
     return {shortestDistance, optimizeRoad};
 }
-int findLatitudePosition(
-    vector<pair<double, int>>& latIndex,
-    double lat
-)
+int findLatitudePosition(vector<pair<double, int>>& latIndex,double lat)
 {
     int left = 0;
     int right = latIndex.size();
-
     while (left < right)
     {
         int mid = left + (right - left) / 2;
-
         if (latIndex[mid].first < lat)
         {
             left = mid + 1;
@@ -143,12 +137,12 @@ int findLatitudePosition(
             right = mid;
         }
     }
-
     return left;
 }
+
 int closestNode(vector<Node>& graphNodes,vector<pair<double, int>>& latIndex,double lat,double lon)
 {
-    int pos = findLatitudePosition(lat);
+    int pos = findLatitudePosition(latIndex, lat);
     int range = 100;
     int start = max(0, pos - range);
     int end = min(
@@ -252,11 +246,7 @@ int TakeLocFromGps(vector<Node>& graphNodes)
                              << lat << ", "
                              << lon << endl;
 
-                        int nearest = closestNode(
-                            graphNodes,
-                            lat,
-                            lon
-                        );
+                        int nearest = closestNode(graphNodes,latIndex,lat,lon);
                         cout << "Nearest Graph ID: "
                              << nearest << endl;
                         CloseHandle(hSerial);
@@ -268,7 +258,7 @@ int TakeLocFromGps(vector<Node>& graphNodes)
     }
 }
 
-void loadData(vector<Node>& graphNodes, vector<long long> wayNodes)
+void loadData(vector<Node>& graphNodes,vector<vector<edge>>& graph)
 {
     pugi::xml_document doc;
     doc.load_file("Data/Saigon.osm");
@@ -303,7 +293,9 @@ void loadData(vector<Node>& graphNodes, vector<long long> wayNodes)
         graphNodes.push_back(newNode);
         graphid++;
     }
-    vector<vector<edge>> graph(graphid);
+
+    vector<long long> wayNodes;
+    graph.resize(graphid);
     for (pugi::xml_node way : osm.children("way"))
     {
         string highway="";
@@ -358,13 +350,10 @@ void loadData(vector<Node>& graphNodes, vector<long long> wayNodes)
     latIndex.resize(graphNodes.size());
     for (int i = 0; i < graphNodes.size(); i++)
     {
-        latIndex.push_back({graphNodes[i].lat,i});
+        latIndex[i] = {graphNodes[i].lat, i};
     }
     sort(latIndex.begin(), latIndex.end());
-
-
 }
-
 
 int main()
 {   
