@@ -201,7 +201,7 @@ pair<double, vector<string>> dijkstraCar(vector<vector<edge>>& graph,int s, int 
 }
 
 
-int findLatitudePosition(vector<pair<double, int>>& latIndex,double lat)
+int findLatitudePosition(vector<pair<double, int>>& latIndex,double lat) //binary search
 {
     int left = 0;
     int right = latIndex.size();
@@ -223,12 +223,8 @@ int findLatitudePosition(vector<pair<double, int>>& latIndex,double lat)
 int closestNode(vector<Node>& graphNodes,vector<pair<double, int>>& latIndex,double lat,double lon)
 {
     int pos = findLatitudePosition(latIndex, lat);
-    int range = 100;
-    int start = max(0, pos - range);
-    int end = min(
-        (int)latIndex.size(),
-        pos + range
-    );
+    int start = max(0, pos - 100);
+    int end = min((int)latIndex.size(),pos + 100);
     int nearest = -1;
     double minDistance = INF;
     for (int i = start; i < end; i++)
@@ -246,22 +242,14 @@ int closestNode(vector<Node>& graphNodes,vector<pair<double, int>>& latIndex,dou
 
 int TakeLocFromGps(vector<Node>& graphNodes)
 {
-    HANDLE hSerial = CreateFileA(
-        "\\\\.\\COM7",
-        GENERIC_READ,
-        0,
-        NULL,
-        OPEN_EXISTING,
-        0,
-        NULL
+    HANDLE hSerial = CreateFileA("\\\\.\\COM7",
+        GENERIC_READ, 0, NULL,OPEN_EXISTING,0 ,NULL
     );
     if (hSerial == INVALID_HANDLE_VALUE)
     {
         cout << "Khong mo duoc COM7\n";
         return -1;
     }
-    cout << "Da mo COM7!\n";
-    cout<<"ok";
     DCB dcbSerialParams = {0};
     dcbSerialParams.DCBlength = sizeof(dcbSerialParams);
     if (!GetCommState(hSerial, &dcbSerialParams))
@@ -280,27 +268,18 @@ int TakeLocFromGps(vector<Node>& graphNodes)
         CloseHandle(hSerial);
         return -1;
     }
-    cout << "COM7: 115200 baud\n";
-
     char buffer[128];
     DWORD bytesRead;
     string line = "";
     while (true)
     {
-        if (ReadFile(
-            hSerial,
-            buffer,
-            sizeof(buffer) - 1,
-            &bytesRead,
-            NULL))
+        if (ReadFile(hSerial,buffer,sizeof(buffer) - 1,&bytesRead,NULL))
         {
             if (bytesRead > 0)
             {
                 buffer[bytesRead] = '\0';
                 line += buffer;
-
                 size_t pos;
-
                 while ((pos = line.find('\n')) != string::npos)
                 {
                     string oneLine = line.substr(0, pos);
@@ -311,24 +290,14 @@ int TakeLocFromGps(vector<Node>& graphNodes)
                     {
                         oneLine.pop_back();
                     }
-
-                    cout << "Nhan: [" << oneLine << "]\n";
-
                     double lat, lon;
                     char comma;
-
                     stringstream ss(oneLine);
-
                     if (ss >> lat >> comma >> lon)
                     {
-                        cout << "GPS: "
-                             << fixed << setprecision(6)
-                             << lat << ", "
-                             << lon << endl;
-
+                        cout << "GPS: "<< fixed << setprecision(6)<< lat << ", "<< lon << endl;
                         int nearest = closestNode(graphNodes,latIndex,lat,lon);
-                        cout << "Nearest Graph ID: "
-                             << nearest << endl;
+                        cout << "Nearest Graph ID: "<< nearest << endl;
                         CloseHandle(hSerial);
                         return nearest;
                     }
@@ -459,5 +428,5 @@ void loadData(vector<Node>& graphNodes,vector<vector<edge>>& graph)
 
 int main()
 {   
-    
+    graphNodes one =
 }
