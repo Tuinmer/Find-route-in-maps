@@ -51,7 +51,7 @@ double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
     double c = 2.0 * atan2(sqrt(a), sqrt(1.0 - a));
     return R * c; 
 }
-
+// dijkstra
 pair<double, vector<string>> dijkstraCycle(vector<vector<edge>>& graph,int s, int e)
 {
     optimizeRoad.clear();
@@ -202,7 +202,7 @@ pair<double, vector<string>> dijkstraCar(vector<vector<edge>>& graph,int s, int 
     return {shortestDistance, optimizeRoad};
 }
 
-
+//Phần lấy từ gps
 int findLatitudePosition(vector<pair<double, int>>& latIndex,double lat) 
 {
     int left = 0;
@@ -308,7 +308,7 @@ int TakeLocFromGps(vector<Node>& graphNodes)
         }
     }
 }
-
+//phần loaddata osm
 void loadData(vector<Node>& graphNodes,vector<vector<edge>>& graph)
 {
     pugi::xml_document doc;
