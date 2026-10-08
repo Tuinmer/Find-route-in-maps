@@ -54,6 +54,7 @@ double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
 
 pair<double, vector<string>> dijkstraCycle(vector<vector<edge>>& graph,int s, int e)
 {
+    optimizeRoad.clear();
     vector<double> d(graph.size(), INF);
     vector<int> pre(graph.size(), -1);
     if (s == e)
@@ -128,6 +129,7 @@ pair<double, vector<string>> dijkstraCycle(vector<vector<edge>>& graph,int s, in
 
 pair<double, vector<string>> dijkstraCar(vector<vector<edge>>& graph,int s, int e)
 {
+    optimizeRoad.clear();
     vector<double> d(graph.size(), INF);
     vector<int> pre(graph.size(), -1);
     if (s == e)
@@ -201,7 +203,7 @@ pair<double, vector<string>> dijkstraCar(vector<vector<edge>>& graph,int s, int 
 }
 
 
-int findLatitudePosition(vector<pair<double, int>>& latIndex,double lat) //binary search
+int findLatitudePosition(vector<pair<double, int>>& latIndex,double lat) 
 {
     int left = 0;
     int right = latIndex.size();
@@ -223,8 +225,8 @@ int findLatitudePosition(vector<pair<double, int>>& latIndex,double lat) //binar
 int closestNode(vector<Node>& graphNodes,vector<pair<double, int>>& latIndex,double lat,double lon)
 {
     int pos = findLatitudePosition(latIndex, lat);
-    int start = max(0, pos - 100);
-    int end = min((int)latIndex.size(),pos + 100);
+    int start = max(0, pos - 200);
+    int end = min((int)latIndex.size(),pos + 200);
     int nearest = -1;
     double minDistance = INF;
     for (int i = start; i < end; i++)
@@ -428,5 +430,4 @@ void loadData(vector<Node>& graphNodes,vector<vector<edge>>& graph)
 
 int main()
 {   
-    graphNodes one =
 }
