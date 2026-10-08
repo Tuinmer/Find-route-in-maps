@@ -15,19 +15,21 @@ struct edge {
     long long to;
     double weight;
     string roadName;
+    bool carAllow;
+    bool cycleAllow;
 };
 vector<string> optimizeRoad;
 vector<Node> graphNodes;
 vector<pair<double, int>> latIndex;
 vector<vector<edge>> graph;
-void addEdgeNotOneWay(vector<vector<edge>>& graph,int source,int destination,double weight,string roadName)
+void addEdgeNotOneWay(vector<vector<edge>>& graph,int source,int destination,double weight,string roadName, bool carAllow, bool cycleAllow)
 {
-    graph[source].push_back({destination, weight,roadName});
-    graph[destination].push_back({source, weight,roadName});
+    graph[source].push_back({destination, weight,roadName, carAllow,cycleAllow});
+    graph[destination].push_back({source, weight,roadName, carAllow,cycleAllow});
 }
-void addEdgeOneWay(vector<vector<edge>>& graph, int source, int destination, double weight, string roadName)
+void addEdgeOneWay(vector<vector<edge>>& graph, int source, int destination, double weight, string roadName, bool carAllow, bool cycleAllow)
 {
-    graph[source].push_back({destination, weight,roadName});
+    graph[source].push_back({destination, weight,roadName,carAllow,cycleAllow});
 };
 bool isRoad(string highway) {
     return highway == "motorway" ||highway == "trunk" ||highway == "primary" ||highway == "secondary" ||highway == "tertiary" ||highway == "residential" ||highway == "service";
@@ -50,7 +52,7 @@ double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
     return R * c; 
 }
 
-pair<double, vector<string>> dijkstra(vector<vector<edge>>& graph,int s, int e)
+pair<double, vector<string>> dijkstraCycle(vector<vector<edge>>& graph,int s, int e)
 {
     vector<double> d(graph.size(), INF);
     vector<int> pre(graph.size(), -1);
@@ -81,6 +83,82 @@ pair<double, vector<string>> dijkstra(vector<vector<edge>>& graph,int s, int e)
         }
         for (auto it:graph[u]) // lay may cai du lieu trong graph
         {
+            long long v = it.to;
+            if (!it.cycleAllow)
+                continue;
+            double w = it.weight;
+            if (d[v] > d[u] + w)
+            {
+                d[v] = d[u] + w;
+                Q.push({d[v], v});
+                pre[v] = u; // truoc v la u
+            }
+        }
+    }
+    double shortestDistance = d[e];
+    vector<int> path;
+    if (d[e] == INF)
+    {
+        cout << "Khong co duong di!\n";
+        return {0, {"0"}};
+    }
+    while(1)
+    {
+        path.push_back(e);
+        if (e==s) break;
+        e = pre[e];
+    }
+    reverse(begin(path), end(path));
+    for (int i = 0; i < path.size() - 1; i++)
+    {
+        int u = path[i];
+        int v = path[i + 1];
+
+        for (auto edge : graph[u])
+        {
+            if (edge.to == v)
+            {
+                optimizeRoad.push_back(edge.roadName);
+                break;
+            }
+        }
+    }
+    return {shortestDistance, optimizeRoad};
+}
+
+pair<double, vector<string>> dijkstraCar(vector<vector<edge>>& graph,int s, int e)
+{
+    vector<double> d(graph.size(), INF);
+    vector<int> pre(graph.size(), -1);
+    if (s == e)
+    {
+        cout << "Diem dau trung diem cuoi\n";
+        return {0, {}};
+    }
+    d[s] = 0;
+    pre[s] = s;
+    priority_queue<pair<double, int>, vector<pair<double, int>>, greater<pair<double, int>>> Q;
+    //{khoang cach, dinh}
+    
+    Q.push({0,s});
+    while (!Q.empty())
+    {
+        pair<double,int> top= Q.top();
+        Q.pop();
+        long long u = top.second;
+        double kc = top.first;
+        if (kc > d[u])
+        {
+            continue;
+        }
+        if (u==e)
+        {
+            break;
+        }
+        for (auto it:graph[u]) // lay may cai du lieu trong graph
+        {
+            if (!it.carAllow)
+                continue;
             long long v = it.to;
             double w = it.weight;
             if (d[v] > d[u] + w)
@@ -121,6 +199,8 @@ pair<double, vector<string>> dijkstra(vector<vector<edge>>& graph,int s, int e)
     }
     return {shortestDistance, optimizeRoad};
 }
+
+
 int findLatitudePosition(vector<pair<double, int>>& latIndex,double lat)
 {
     int left = 0;
@@ -294,12 +374,17 @@ void loadData(vector<Node>& graphNodes,vector<vector<edge>>& graph)
         graphid++;
     }
 
-    vector<long long> wayNodes;
+    
     graph.resize(graphid);
     for (pugi::xml_node way : osm.children("way"))
     {
+        vector<long long> wayNodes;
         string highway="";
         string roadName = "No Name";
+        string motorcycle = "";
+        string motorcar = "";
+        bool carAllow = true;
+        bool cycleAllow = true;
         for (pugi::xml_node tag : way.children("tag"))
         {
             string key = tag.attribute("k").as_string();
@@ -312,9 +397,26 @@ void loadData(vector<Node>& graphNodes,vector<vector<edge>>& graph)
             {
                 roadName = value;
             }
+            if (key == "motorcycle")
+            {
+                motorcycle = value;
+            }
+            if (key == "motor_vehicle")
+            {
+                motorcar = value;
+            }
+        }
+        if (motorcycle == "no")
+        {
+            cycleAllow = false;
+        }
+        if (motorcar == "no")
+        {
+            carAllow = false;
         }
 
         if (!isRoad(highway)) continue;
+
         string oneway="no";
         for (pugi::xml_node tag: way.children("tag"))
         {
@@ -343,8 +445,8 @@ void loadData(vector<Node>& graphNodes,vector<vector<edge>>& graph)
             long long destination = osmToGraph[to];
             if (oneway == "yes")
             {
-                addEdgeOneWay(graph, source, destination, distance, roadName);
-            }else addEdgeNotOneWay(graph, source, destination, distance, roadName);
+                addEdgeOneWay(graph, source, destination, distance, roadName, carAllow, cycleAllow);
+            }else addEdgeNotOneWay(graph, source, destination, distance, roadName, carAllow, cycleAllow);
         }
     }
     latIndex.resize(graphNodes.size());
