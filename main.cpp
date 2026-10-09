@@ -18,7 +18,7 @@ struct edge {
     bool carAllow;
     bool cycleAllow;
 };
-vector<string> optimizeRoad;
+
 vector<Node> graphNodes;
 vector<pair<double, int>> latIndex;
 vector<vector<edge>> graph;
@@ -54,7 +54,7 @@ double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
 // dijkstra
 pair<double, vector<string>> dijkstraCycle(vector<vector<edge>>& graph,int s, int e)
 {
-    optimizeRoad.clear();
+    vector<string> optimizeRoad;
     vector<double> d(graph.size(), INF);
     vector<int> pre(graph.size(), -1);
     if (s == e)
@@ -129,7 +129,7 @@ pair<double, vector<string>> dijkstraCycle(vector<vector<edge>>& graph,int s, in
 
 pair<double, vector<string>> dijkstraCar(vector<vector<edge>>& graph,int s, int e)
 {
-    optimizeRoad.clear();
+    vector<string> optimizeRoad;
     vector<double> d(graph.size(), INF);
     vector<int> pre(graph.size(), -1);
     if (s == e)
