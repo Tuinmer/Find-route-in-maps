@@ -1,4 +1,4 @@
-#include "mainwindow(2).h"
+#include "FrontEnd/mainwindow(2).h"
 #include "ui_mainwindow(2).h"
 #include "BackEnd.cpp"
 #include <QCoreApplication>

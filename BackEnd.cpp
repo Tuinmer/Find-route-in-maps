@@ -314,7 +314,7 @@ int TakeLocFromGps(vector<Node>& graphNodes)
 void loadData(vector<Node>& graphNodes,vector<vector<edge>>& graph)
 {
     pugi::xml_document doc;
-    doc.load_file("D:/ProjectDiscreteMathematics/GUI_APP/Saigon.osm");
+    doc.load_file("Data/Saigon.osm");
     pugi::xml_node osm = doc.child("osm");
     unordered_map<long long, Node> nodes;
     unordered_map<long long,int> osmToGraph;
